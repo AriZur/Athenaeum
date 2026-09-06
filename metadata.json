@@ -1,0 +1,6 @@
+{
+  "name": "Athenaeum Library Management System",
+  "description": "Comprehensive library management system with user authentication, real-time book tracking, circulation & borrowing with weekly fee renewals, member rental histories, and financial revenue analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
