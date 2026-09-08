@@ -416,6 +416,53 @@ export async function fetchMembers(accountId?: string): Promise<Member[]> {
   return data || [];
 }
 
+export async function findMemberByContact(
+  contact: { phone?: string | null; email?: string | null },
+  accountId?: string,
+  excludeMemberId?: string
+): Promise<Member | null> {
+  const resolved = accountId || getActiveAccountId();
+  const trimmedPhone = contact.phone && contact.phone.trim() ? contact.phone.trim() : null;
+  const trimmedEmail = contact.email && contact.email.trim() ? contact.email.trim().toLowerCase() : null;
+
+  if (!trimmedPhone && !trimmedEmail) return null;
+
+  // Extract raw digits for phone comparison
+  const phoneDigits = trimmedPhone ? trimmedPhone.replace(/\D/g, '') : '';
+  const last7Phone = phoneDigits.length >= 7 ? phoneDigits.slice(-7) : null;
+
+  let query = supabase.from('members').select('*');
+  if (resolved) {
+    query = query.eq('account_id', resolved);
+  }
+  if (excludeMemberId) {
+    query = query.neq('id', excludeMemberId);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) return null;
+
+  // 1. First check email match (if email provided)
+  if (trimmedEmail) {
+    const emailMatch = data.find(m => m.email && m.email.trim().toLowerCase() === trimmedEmail);
+    if (emailMatch) return emailMatch;
+  }
+
+  // 2. Check phone match (by clean digits or last 7-9 digits)
+  if (trimmedPhone && last7Phone) {
+    const phoneMatch = data.find(m => {
+      if (!m.phone) return false;
+      const mDigits = m.phone.replace(/\D/g, '');
+      if (mDigits === phoneDigits) return true;
+      if (mDigits.endsWith(last7Phone) || phoneDigits.endsWith(mDigits.slice(-7))) return true;
+      return false;
+    });
+    if (phoneMatch) return phoneMatch;
+  }
+
+  return null;
+}
+
 export async function addMember(
   member: {
     full_name: string;
@@ -426,6 +473,21 @@ export async function addMember(
   accountId?: string
 ): Promise<Member> {
   const resolved = accountId || getActiveAccountId();
+
+  // Check for existing duplicate member by contact
+  const existing = await findMemberByContact(
+    { phone: member.phone, email: member.email },
+    resolved || undefined
+  );
+  if (existing) {
+    const matchedContact = existing.phone && member.phone && existing.phone.replace(/\D/g, '').endsWith(member.phone.replace(/\D/g, '').slice(-7))
+      ? `phone number "${existing.phone}"`
+      : `email "${existing.email}"`;
+    throw new Error(
+      `A member with this ${matchedContact} already exists under the name "${existing.full_name}" (Membership ID: ${existing.membership_number}).`
+    );
+  }
+
   // Auto-generate membership number e.g. MEM-YEAR-RANDOM
   const membership_number = `MEM-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -459,6 +521,23 @@ export async function updateMember(id: string, updates: Partial<Member>): Promis
     cleanUpdates.phone = cleanUpdates.phone && typeof cleanUpdates.phone === 'string' && cleanUpdates.phone.trim() ? cleanUpdates.phone.trim() : null;
   }
 
+  // If phone or email changed, verify no other member has this contact
+  if (cleanUpdates.phone || cleanUpdates.email) {
+    const existing = await findMemberByContact(
+      { phone: cleanUpdates.phone, email: cleanUpdates.email },
+      undefined,
+      id
+    );
+    if (existing) {
+      const matchedContact = existing.phone && cleanUpdates.phone && existing.phone.replace(/\D/g, '').endsWith(cleanUpdates.phone.replace(/\D/g, '').slice(-7))
+        ? `phone number "${existing.phone}"`
+        : `email "${existing.email}"`;
+      throw new Error(
+        `Another member with this ${matchedContact} already exists under the name "${existing.full_name}" (Membership ID: ${existing.membership_number}).`
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from('members')
     .update(cleanUpdates)
@@ -471,6 +550,32 @@ export async function updateMember(id: string, updates: Partial<Member>): Promis
     throw error;
   }
   return data;
+}
+
+export async function deleteMember(id: string): Promise<void> {
+  // Check if member has active or overdue loans
+  const { data: activeRentals, error: checkErr } = await supabase
+    .from('rentals')
+    .select('id, status, book:books(title)')
+    .eq('member_id', id)
+    .in('status', ['active', 'extended', 'overdue']);
+
+  if (!checkErr && activeRentals && activeRentals.length > 0) {
+    const bookTitle = (activeRentals[0] as any)?.book?.title || 'a book';
+    throw new Error(
+      `Cannot delete this member: they currently have ${activeRentals.length} active book loan(s) checked out ("${bookTitle}"). Please return or delete their active loans first.`
+    );
+  }
+
+  const { error } = await supabase
+    .from('members')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting member:', error);
+    throw error;
+  }
 }
 
 // ==================== RENTALS ====================
@@ -1008,6 +1113,48 @@ export async function returnRental(rentalId: string, notes?: string): Promise<Re
   }
 
   return updatedRental;
+}
+
+/**
+ * Deletes a rental record completely from the database.
+ * If the rental was active/overdue, its checked-out copy is safely restored to the book's available stock.
+ */
+export async function deleteRental(rentalId: string): Promise<void> {
+  // Fetch rental to check status and book
+  const { data: rental, error: fetchErr } = await supabase
+    .from('rentals')
+    .select('*, book:books(*)')
+    .eq('id', rentalId)
+    .single();
+
+  if (fetchErr || !rental) {
+    throw new Error('Rental record not found.');
+  }
+
+  // If the rental was not yet returned, restore the copy to available_copies
+  if (rental.status !== 'returned' && rental.book) {
+    const currentAvailable = Number(rental.book.available_copies);
+    const totalCopies = Number(rental.book.total_copies);
+    const newAvailable = Math.min(totalCopies, currentAvailable + 1);
+
+    await supabase
+      .from('books')
+      .update({
+        available_copies: newAvailable,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', rental.book_id);
+  }
+
+  const { error } = await supabase
+    .from('rentals')
+    .delete()
+    .eq('id', rentalId);
+
+  if (error) {
+    console.error('Error deleting rental:', error);
+    throw error;
+  }
 }
 
 // ==================== DASHBOARD STATS COMPUTATION ====================

@@ -16,7 +16,8 @@ import {
   Mail,
   History,
   Info,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 import { RentalWithDetails, Book } from '../types';
 import { formatCurrency, formatDate, formatDateTime } from '../lib/formatters';
@@ -27,6 +28,7 @@ interface RentalsManagementProps {
   initialFilter?: string;
   onReturnRental: (rental: RentalWithDetails) => void;
   onExtendRental: (rental: RentalWithDetails) => void;
+  onDeleteRental?: (rental: RentalWithDetails) => void;
   onOpenBorrowModal: (book?: Book) => void;
   onSelectMember: (memberId: string) => void;
   accountId?: string;
@@ -37,6 +39,7 @@ export const RentalsManagement: React.FC<RentalsManagementProps> = ({
   initialFilter = 'all',
   onReturnRental,
   onExtendRental,
+  onDeleteRental,
   onOpenBorrowModal,
   onSelectMember,
   accountId,
@@ -598,9 +601,19 @@ export const RentalsManagement: React.FC<RentalsManagementProps> = ({
                         </button>
                       </>
                     ) : (
-                      <div className="w-full py-1.5 text-center text-xs font-medium text-[#8c8c7d] bg-[#f8f7f2] rounded-xl border border-[#f0eee4]">
+                      <div className="flex-1 py-1.5 text-center text-xs font-medium text-[#8c8c7d] bg-[#f8f7f2] rounded-xl border border-[#f0eee4]">
                         Returned on shelf
                       </div>
+                    )}
+
+                    {onDeleteRental && (
+                      <button
+                        onClick={() => onDeleteRental(rental)}
+                        className="p-2 text-[#8c8c7d] hover:text-rose-700 hover:bg-rose-50 border border-[#e2e0d5] hover:border-rose-200 rounded-xl transition-colors cursor-pointer shrink-0"
+                        title="Delete rental record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -769,29 +782,40 @@ export const RentalsManagement: React.FC<RentalsManagementProps> = ({
 
                         {/* Actions */}
                         <td className="py-4 px-4 align-top text-right">
-                          {!isReturned ? (
-                            <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {!isReturned ? (
+                              <>
+                                <button
+                                  onClick={() => onReturnRental(rental)}
+                                  className="px-3 py-1.5 bg-[#efede4] hover:bg-[#e6e4d9] text-[#5A5A40] border border-[#e2e0d5] rounded-full font-semibold text-[11px] transition-colors cursor-pointer"
+                                >
+                                  Return
+                                </button>
+                                <button
+                                  onClick={() => onExtendRental(rental)}
+                                  disabled={isMaxWeeks}
+                                  className={`px-3 py-1.5 rounded-full font-semibold text-[11px] transition-colors cursor-pointer ${
+                                    isMaxWeeks
+                                      ? 'bg-[#f0eee4] text-[#8c8c7d] border border-[#e2e0d5] cursor-not-allowed'
+                                      : 'bg-[#5A5A40] hover:bg-[#484833] text-white'
+                                  }`}
+                                >
+                                  {isMaxWeeks ? 'Max Limit' : 'Extend (+7d)'}
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-[#8c8c7d] italic text-[11px] mr-1">Returned</span>
+                            )}
+                            {onDeleteRental && (
                               <button
-                                onClick={() => onReturnRental(rental)}
-                                className="px-3 py-1.5 bg-[#efede4] hover:bg-[#e6e4d9] text-[#5A5A40] border border-[#e2e0d5] rounded-full font-semibold text-[11px] transition-colors cursor-pointer"
+                                onClick={() => onDeleteRental(rental)}
+                                className="p-1.5 text-[#8c8c7d] hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-full transition-colors cursor-pointer"
+                                title="Delete rental record"
                               >
-                                Return
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
-                              <button
-                                onClick={() => onExtendRental(rental)}
-                                disabled={isMaxWeeks}
-                                className={`px-3 py-1.5 rounded-full font-semibold text-[11px] transition-colors cursor-pointer ${
-                                  isMaxWeeks
-                                    ? 'bg-[#f0eee4] text-[#8c8c7d] border border-[#e2e0d5] cursor-not-allowed'
-                                    : 'bg-[#5A5A40] hover:bg-[#484833] text-white'
-                                }`}
-                              >
-                                {isMaxWeeks ? 'Max Limit' : 'Extend (+7d)'}
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-[#8c8c7d] italic">Returned</span>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -906,10 +930,23 @@ export const RentalsManagement: React.FC<RentalsManagementProps> = ({
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center justify-between gap-3">
+              {onDeleteRental && selectedRentalForDetail ? (
+                <button
+                  onClick={() => {
+                    const toDelete = selectedRentalForDetail;
+                    setSelectedRentalForDetail(null);
+                    onDeleteRental(toDelete);
+                  }}
+                  className="px-4 py-2.5 text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Loan Record</span>
+                </button>
+              ) : <div />}
               <button
                 onClick={() => setSelectedRentalForDetail(null)}
-                className="w-full py-2.5 bg-[#5A5A40] text-white rounded-full text-xs font-semibold hover:bg-[#484833] uppercase tracking-wider cursor-pointer"
+                className="px-6 py-2.5 bg-[#5A5A40] text-white rounded-full text-xs font-semibold hover:bg-[#484833] uppercase tracking-wider cursor-pointer"
               >
                 Close Ledger
               </button>

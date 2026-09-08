@@ -54,7 +54,7 @@ async function setup() {
         borrow_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         due_date TIMESTAMPTZ NOT NULL,
         return_date TIMESTAMPTZ,
-        weeks_borrowed INT NOT NULL DEFAULT 1 CHECK (weeks_borrowed >= 1 AND weeks_borrowed <= 4),
+        weeks_borrowed INT NOT NULL DEFAULT 1 CHECK (weeks_borrowed >= 1),
         weekly_fee NUMERIC(10, 2) NOT NULL CHECK (weekly_fee >= 0),
         total_fees_paid NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (total_fees_paid >= 0),
         status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'extended', 'returned', 'overdue')),
@@ -67,7 +67,7 @@ async function setup() {
       CREATE TABLE IF NOT EXISTS rental_renewals (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         rental_id UUID NOT NULL REFERENCES rentals(id) ON DELETE CASCADE,
-        week_number INT NOT NULL CHECK (week_number >= 2 AND week_number <= 4),
+        week_number INT NOT NULL CHECK (week_number >= 2),
         fee_amount NUMERIC(10, 2) NOT NULL CHECK (fee_amount >= 0),
         renewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         new_due_date TIMESTAMPTZ NOT NULL,

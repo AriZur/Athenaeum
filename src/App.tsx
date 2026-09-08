@@ -31,6 +31,8 @@ import {
   deleteBook, 
   addMember, 
   updateMember,
+  deleteMember,
+  deleteRental,
   computeDashboardStats,
   subscribeToLibraryChanges,
   fetchLibrarySettings,
@@ -231,6 +233,32 @@ function LibraryApp() {
     await loadData();
   };
 
+  const handleDeleteMember = async (member: Member) => {
+    if (window.confirm(`Are you sure you want to delete member "${member.full_name}" (${member.membership_number})? This action cannot be undone.`)) {
+      try {
+        await deleteMember(member.id);
+        await loadData();
+        showToast(`Member "${member.full_name}" deleted.`);
+      } catch (err: any) {
+        showToast(err.message || 'Cannot delete member with active loans.', 'error');
+      }
+    }
+  };
+
+  const handleDeleteRental = async (rental: RentalWithDetails) => {
+    const bookTitle = rental.book?.title || 'Book loan';
+    const borrower = rental.member?.full_name || 'Member';
+    if (window.confirm(`Are you sure you want to delete this loan record for "${bookTitle}" (borrowed by ${borrower})?`)) {
+      try {
+        await deleteRental(rental.id);
+        await loadData();
+        showToast(`Loan record for "${bookTitle}" deleted.`);
+      } catch (err: any) {
+        showToast(err.message || 'Failed to delete rental record.', 'error');
+      }
+    }
+  };
+
   const handleSaveOverallRate = async (newRate: number) => {
     await updateOverallWeeklyRate(newRate, currentAccountId);
     setOverallRate(newRate);
@@ -330,6 +358,7 @@ function LibraryApp() {
                 initialFilter={rentalsFilter}
                 onReturnRental={handleOpenReturn}
                 onExtendRental={handleOpenExtend}
+                onDeleteRental={handleDeleteRental}
                 onOpenBorrowModal={handleOpenBorrow}
                 onSelectMember={handleSelectMemberHistory}
                 accountId={currentAccountId || undefined}
@@ -367,6 +396,7 @@ function LibraryApp() {
                   setEditingMember(m);
                   setIsMemberModalOpen(true);
                 }}
+                onDeleteMember={handleDeleteMember}
                 accountId={currentAccountId || undefined}
                 refreshTrigger={refreshTrigger}
               />

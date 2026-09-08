@@ -248,6 +248,25 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
     );
   });
 
+  // Check if the contact entered in "New Member" form already belongs to an existing member
+  const detectedExistingMember = useMemo(() => {
+    if (!isCreatingNewMember) return null;
+    const cleanPhoneDigits = newMemberPhone ? newMemberPhone.replace(/\D/g, '') : '';
+    const cleanEmail = newMemberEmail ? newMemberEmail.trim().toLowerCase() : '';
+
+    return members.find(m => {
+      if (cleanEmail && m.email && m.email.trim().toLowerCase() === cleanEmail) {
+        return true;
+      }
+      if (cleanPhoneDigits && cleanPhoneDigits.length >= 7 && m.phone) {
+        const mDigits = m.phone.replace(/\D/g, '');
+        if (mDigits === cleanPhoneDigits) return true;
+        if (mDigits.endsWith(cleanPhoneDigits.slice(-7)) || cleanPhoneDigits.endsWith(mDigits.slice(-7))) return true;
+      }
+      return false;
+    }) || null;
+  }, [isCreatingNewMember, newMemberPhone, newMemberEmail, members]);
+
   // Effective end date of the loan (returnDate if historical returned, otherwise today)
   const effectiveEndDate = isHistoricalReturned && returnDate ? returnDate : todayStr;
 
@@ -910,6 +929,33 @@ export const BorrowModal: React.FC<BorrowModalProps> = ({
                     />
                   </div>
                 </div>
+
+                {/* Warning if phone or email matches existing member */}
+                {detectedExistingMember && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                    <div className="flex items-start gap-2 text-xs text-amber-900">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold">Member already exists: </span>
+                        <span>
+                          This contact belongs to <strong className="text-amber-950 font-bold">{detectedExistingMember.full_name}</strong> ({detectedExistingMember.membership_number}) in the database.
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSelectMember(detectedExistingMember);
+                        setIsCreatingNewMember(false);
+                        setError(null);
+                      }}
+                      className="w-full py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Select "{detectedExistingMember.full_name}" as Borrower</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

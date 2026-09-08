@@ -9,7 +9,8 @@ import {
   History, 
   BookOpen, 
   Edit,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { Member, RentalWithDetails } from '../types';
 import { formatCurrency, formatDate } from '../lib/formatters';
@@ -20,6 +21,7 @@ interface MembersDirectoryProps {
   selectedMemberId?: string | null;
   onOpenAddMemberModal: () => void;
   onOpenEditMemberModal: (member: Member) => void;
+  onDeleteMember?: (member: Member) => void;
   accountId?: string;
   refreshTrigger?: number;
 }
@@ -28,6 +30,7 @@ export const MembersDirectory: React.FC<MembersDirectoryProps> = ({
   selectedMemberId,
   onOpenAddMemberModal,
   onOpenEditMemberModal,
+  onDeleteMember,
   accountId,
   refreshTrigger = 0,
 }) => {
@@ -263,13 +266,24 @@ export const MembersDirectory: React.FC<MembersDirectoryProps> = ({
                         </span>
                       </div>
 
-                      <button
-                        onClick={() => onOpenEditMemberModal(member)}
-                        className="p-1.5 text-[#8c8c7d] hover:text-[#2d2d26] hover:bg-[#efede4] rounded-full transition-colors cursor-pointer"
-                        title="Edit contact info"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => onOpenEditMemberModal(member)}
+                          className="p-1.5 text-[#8c8c7d] hover:text-[#2d2d26] hover:bg-[#efede4] rounded-full transition-colors cursor-pointer"
+                          title="Edit contact info"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        {onDeleteMember && (
+                          <button
+                            onClick={() => onDeleteMember(member)}
+                            className="p-1.5 text-[#8c8c7d] hover:text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
+                            title="Delete member record"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Contact details */}
@@ -498,7 +512,20 @@ export const MembersDirectory: React.FC<MembersDirectoryProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="pt-3 border-t border-[#f0eee4] flex justify-end">
+            <div className="pt-3 border-t border-[#f0eee4] flex items-center justify-between">
+              {onDeleteMember && activeHistoryMember ? (
+                <button
+                  onClick={() => {
+                    const toDelete = activeHistoryMember;
+                    setActiveHistoryMember(null);
+                    onDeleteMember(toDelete);
+                  }}
+                  className="px-3 py-1.5 text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Member</span>
+                </button>
+              ) : <div />}
               <button
                 onClick={() => setActiveHistoryMember(null)}
                 className="px-4 py-2 bg-[#5A5A40] text-white rounded-full text-xs font-semibold hover:bg-[#484833] uppercase tracking-wider cursor-pointer"
