@@ -73,15 +73,13 @@ export const LoginScreen: React.FC = () => {
     <div className="min-h-screen bg-[#f8f7f2] flex flex-col justify-between text-[#434338] px-4 py-8 sm:py-12 selection:bg-[#efede4] selection:text-[#5A5A40]">
       {/* Top Brand Bar */}
       <header className="max-w-4xl mx-auto w-full flex items-center justify-between pb-6 border-b border-[#e2e0d5]">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-serif text-2xl font-bold tracking-tight text-[#2d2d26]">
-                Athenaeum
-              </span>
-            </div>
-            <p className="text-xs text-[#8c8c7d]">Circulation & Inventory Management</p>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-serif text-2xl font-bold tracking-tight text-[#2d2d26]">
+              Athenaeum
+            </span>
           </div>
+          <p className="text-xs text-[#8c8c7d]">Circulation & Inventory Management</p>
         </div>
 
         <div className="hidden sm:flex items-center gap-2 text-xs text-[#8c8c7d]">

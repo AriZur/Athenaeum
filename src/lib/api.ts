@@ -613,6 +613,7 @@ export async function fetchRentalStatusCounts(accountId?: string): Promise<{
       overdue++;
     } else if (r.status === 'extended') {
       extended++;
+      active++; // Extended loans are counted as Active Loans in the Borrowing tab and Active status pill
     } else if (r.status === 'active') {
       active++;
     }
@@ -1179,11 +1180,15 @@ export function computeDashboardStats(
     rentalBaseRevenue += weeklyFee;
     extensionRevenue += Math.max(0, feePaid - weeklyFee);
 
-    if (r.status === 'active' || r.status === 'extended') {
-      activeRentalsCount++;
-    } else if (r.status === 'overdue') {
-      activeRentalsCount++;
+    const now = new Date();
+    const isPastDue = (r.status === 'overdue') || (r.status !== 'returned' && r.due_date && new Date(r.due_date) < now);
+
+    if (r.status === 'returned') {
+      // Returned loan - closed
+    } else if (isPastDue) {
       overdueCount++;
+    } else if (r.status === 'active' || r.status === 'extended') {
+      activeRentalsCount++;
     }
 
     if (r.book_id) {

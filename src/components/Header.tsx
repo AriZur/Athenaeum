@@ -26,6 +26,7 @@ interface HeaderProps {
   overallRate?: number;
   realtimeConnected: boolean;
   overdueCount: number;
+  activeRentalsCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   overallRate = 100,
   realtimeConnected,
   overdueCount,
+  activeRentalsCount = 0,
 }) => {
   const { user, isAdmin, userName, userEmail, signOut } = useAuth();
 
@@ -46,19 +48,17 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Brand Name */}
-          <div className="flex items-center gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#2d2d26]">
-                  Athenaeum
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-[#8c8c7d]">
-                <span className="flex items-center gap-1 font-mono">
-                  <Radio className={`w-3 h-3 ${realtimeConnected ? 'text-emerald-600 animate-pulse' : 'text-[#8c8c7d]'}`} />
-                  {realtimeConnected ? 'Live Real-Time Sync' : 'Connecting...'}
-                </span>
-              </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#2d2d26]">
+                Athenaeum
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[#8c8c7d]">
+              <span className="flex items-center gap-1 font-mono">
+                <Radio className={`w-3 h-3 ${realtimeConnected ? 'text-emerald-600 animate-pulse' : 'text-[#8c8c7d]'}`} />
+                {realtimeConnected ? 'Live Real-Time Sync' : 'Connecting...'}
+              </span>
             </div>
           </div>
 
@@ -88,8 +88,13 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Clock className="w-3.5 h-3.5" />
               Borrowing & Returns
+              {activeRentalsCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#166534] text-white" title={`${activeRentalsCount} active borrowing(s) including extended`}>
+                  {activeRentalsCount}
+                </span>
+              )}
               {overdueCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white">
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white" title={`${overdueCount} overdue`}>
                   {overdueCount}
                 </span>
               )}
@@ -209,6 +214,11 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Borrowing
+            {activeRentalsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#166534] text-white">
+                {activeRentalsCount}
+              </span>
+            )}
             {overdueCount > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-600 text-white">
                 {overdueCount}

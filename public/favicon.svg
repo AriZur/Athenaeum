@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#36362e" />
+      <stop offset="100%" stop-color="#23231d" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c872" />
+      <stop offset="100%" stop-color="#b8933b" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-opacity="0.35" flood-color="#000" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle / Rounded Badge -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bgGrad)" stroke="#5A5A40" stroke-width="1.5" />
+
+  <!-- Classical Arch / Pediment Header Line -->
+  <path d="M 18 16 L 32 11 L 46 16" stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9" />
+  <circle cx="32" cy="11" r="1.5" fill="url(#goldGrad)" />
+
+  <!-- Open Book Emblem with Shadow -->
+  <g filter="url(#shadow)">
+    <!-- Book Cover Outer Spine Backing -->
+    <path d="M 13 42 C 20 44 28 44 32 46 C 36 44 44 44 51 42 C 51 43 49 44.5 44 46 C 39 47 34 47.5 32 48 C 30 47.5 25 47 20 46 C 15 44.5 13 43 13 42 Z" fill="#5A5A40" />
+
+    <!-- Left Book Page -->
+    <path d="M 32 44.5 C 27 42.5 19 42.5 14 41 L 14 23 C 19 24.5 27 24.5 32 26.5 Z" fill="#f8f7f2" stroke="#e2e0d5" stroke-width="0.75" stroke-linejoin="round" />
+    
+    <!-- Left Page Inner Text Lines -->
+    <path d="M 18 27.5 C 22 28.5 27 28.5 29 29.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+    <path d="M 18 31.5 C 22 32.5 27 32.5 29 33.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+    <path d="M 18 35.5 C 22 36.5 27 36.5 29 37.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+
+    <!-- Right Book Page -->
+    <path d="M 32 44.5 C 37 42.5 45 42.5 50 41 L 50 23 C 45 24.5 37 24.5 32 26.5 Z" fill="#ffffff" stroke="#e2e0d5" stroke-width="0.75" stroke-linejoin="round" />
+
+    <!-- Right Page Inner Text Lines -->
+    <path d="M 35 29.5 C 37 28.5 42 28.5 46 27.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+    <path d="M 35 33.5 C 37 32.5 42 32.5 46 31.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+    <path d="M 35 37.5 C 37 36.5 42 36.5 46 35.5" stroke="#8c8c7d" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+
+    <!-- Book Spine Gutter -->
+    <line x1="32" y1="26.5" x2="32" y2="44.5" stroke="#5A5A40" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Golden Bookmark Ribbon Hanging in Center -->
+    <path d="M 30.5 24 L 33.5 24 L 33.5 48.5 L 32 47 L 30.5 48.5 Z" fill="url(#goldGrad)" stroke="#9c782b" stroke-width="0.5" />
+  </g>
+</svg>

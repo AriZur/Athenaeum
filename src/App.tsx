@@ -274,7 +274,7 @@ function LibraryApp() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#f8f7f2] flex flex-col items-center justify-center space-y-3">
-        <RefreshCw className="w-8 h-8 text-[#5A5A40] animate-spin" />
+        <RefreshCw className="w-6 h-6 text-[#5A5A40] animate-spin" />
         <div className="font-serif text-xl font-bold text-[#2d2d26]">
           Athenaeum
         </div>
@@ -321,6 +321,7 @@ function LibraryApp() {
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         realtimeConnected={realtimeConnected}
         overdueCount={stats.overdueCount}
+        activeRentalsCount={stats.activeRentalsCount}
       />
 
       {/* Main Content Area */}
